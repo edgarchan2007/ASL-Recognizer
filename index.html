@@ -1,59 +1,159 @@
-<div>Teachable Machine Image Model</div>
-<button type="button" onclick="init()">Start</button>
-<div id="webcam-container"></div>
-<div id="label-container"></div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ASL Gesture Recognition</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+            color: #222;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        header {
+            text-align: center;
+            padding: 40px 20px 20px;
+        }
+
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+
+        .section {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            padding: 20px 25px;
+            margin: 15px 0;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        h2 {
+            font-size: 1.4rem;
+            margin-bottom: 10px;
+        }
+
+        p, li {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+
+        #webcam-container, #label-container {
+            margin-top: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 16px;
+            margin-top: 15px;
+            background-color: #2e6df6;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #1d50c3;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>ASL Gesture Recognition</h1>
+    <p>A real‑time classifier that recognizes simple ASL hand gestures using a Teachable Machine model.</p>
+</header>
+
+<div class="section">
+    <h2>Project Overview</h2>
+    <p>
+        This project demonstrates how machine learning can help interpret common American Sign Language (ASL) gestures. 
+        Using a custom Teachable Machine image‑based model, this webpage uses your device's camera to identify hand gestures 
+        such as <strong>Hello</strong>, <strong>Please</strong>, <strong>Thank you</strong>, <strong>Yes</strong>, and <strong>No</strong>. 
+        The system analyzes each video frame in real time and displays prediction probabilities below.
+    </p>
+</div>
+
+<div class="section">
+    <h2>How the Model Works</h2>
+    <p>
+        The model was created using Google’s Teachable Machine, which allows image‑based training without writing code. 
+        Each ASL gesture was recorded through multiple images to help the model learn distinguishing patterns such as hand shape, 
+        orientation, and motion. When the camera is activated, each frame is passed into the model, which outputs a probability 
+        score for each gesture class. The highest score typically represents the gesture being performed.
+    </p>
+</div>
+
+<div class="section">
+    <h2>Try It Yourself</h2>
+    <ol>
+        <li>Click the <strong>Start</strong> button below to activate your webcam.</li>
+        <li>Stand in front of the camera with your hand clearly visible.</li>
+        <li>Perform one of the following ASL gestures: Hello, Please, Thank you, Yes, or No.</li>
+        <li>Watch the prediction labels update in real time.</li>
+    </ol>
+
+    <button type="button" onclick="init()">Start</button>
+    <div id="webcam-container"></div>
+    <div id="label-container"></div>
+</div>
+
+<!-- Teachable Machine Scripts -->
 <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"></script>
 <script type="text/javascript">
-    // More API functions here:
-    // https://github.com/googlecreativelab/teachablemachine-community/tree/master/libraries/image
-
-    // the link to your model provided by Teachable Machine export panel
     const URL = "./my_model/";
 
     let model, webcam, labelContainer, maxPredictions;
 
-    // Load the image model and setup the webcam
     async function init() {
         const modelURL = URL + "model.json";
         const metadataURL = URL + "metadata.json";
 
-        // load the model and metadata
-        // Refer to tmImage.loadFromFiles() in the API to support files from a file picker
-        // or files from your local hard drive
-        // Note: the pose library adds "tmImage" object to your window (window.tmImage)
         model = await tmImage.load(modelURL, metadataURL);
         maxPredictions = model.getTotalClasses();
 
-        // Convenience function to setup a webcam
-        const flip = true; // whether to flip the webcam
-        webcam = new tmImage.Webcam(200, 200, flip); // width, height, flip
-        await webcam.setup(); // request access to the webcam
+        const flip = true;
+        webcam = new tmImage.Webcam(250, 250, flip);
+        await webcam.setup();
         await webcam.play();
         window.requestAnimationFrame(loop);
 
-        // append elements to the DOM
         document.getElementById("webcam-container").appendChild(webcam.canvas);
         labelContainer = document.getElementById("label-container");
-        for (let i = 0; i < maxPredictions; i++) { // and class labels
+
+        for (let i = 0; i < maxPredictions; i++) {
             labelContainer.appendChild(document.createElement("div"));
         }
     }
 
     async function loop() {
-        webcam.update(); // update the webcam frame
+        webcam.update();
         await predict();
         window.requestAnimationFrame(loop);
     }
 
-    // run the webcam image through the image model
     async function predict() {
-        // predict can take in an image, video or canvas html element
         const prediction = await model.predict(webcam.canvas);
         for (let i = 0; i < maxPredictions; i++) {
-            const classPrediction =
-                prediction[i].className + ": " + prediction[i].probability.toFixed(2);
+            const classPrediction = `${prediction[i].className}: ${prediction[i].probability.toFixed(2)}`;
             labelContainer.childNodes[i].innerHTML = classPrediction;
         }
     }
 </script>
+
+</body>
+</html>
